@@ -55,10 +55,10 @@ class mpc(object):
         self.xmin = np.array([-np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
         self.xmax = np.array([ np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf])
 
-        self.Q = sparse.diags([1., 1., 1., 0.4, 0.4, 0.4])
+        self.Q = sparse.diags([0.8, 0.8, 1., 0.2, 0.2, 0.4])
         # self.Q = sparse.diags([10., 10., 5., 1., 1., 1.])
         self.QN = self.Q
-        self.R = sparse.diags([10., 10., 8.])
+        self.R = sparse.diags([6., 6., 8.])
         # self.R = sparse.diags([1., 1., 1.])
 
         self.x0 = np.array(x0)

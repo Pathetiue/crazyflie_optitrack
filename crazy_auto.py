@@ -151,7 +151,7 @@ class Crazy_Auto:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
             os.makedirs(save_dir + '/training_data')
-
+        step_count = 0
         while True:
 
             timeStart = time.time()
@@ -169,8 +169,8 @@ class Crazy_Auto:
             state = np.array([x, y, z, dx, dy, dz])
             print("state: ", state)
 
-            # state_data.append(state)
-            # reference_data.append(target)
+            state_data.append(state)
+            reference_data.append(target)
 
             # Compute control signal - map errors to control signals
             if self.isEnabled:
@@ -193,6 +193,12 @@ class Crazy_Auto:
             print("thrust_r: ", int(thrust_r))
             self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
             # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r)) # change!!!
+
+            step_count += 1
+            if step_count > 500:
+                np.save(save_dir + '/training_data/data' + str(step_count) + '.npy', state_data)
+                np.save(save_dir + '/training_data/data' + str(step_count) + '.npy', reference_data)
+
 
 
             '''
