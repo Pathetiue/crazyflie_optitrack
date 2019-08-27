@@ -21,6 +21,8 @@ import cflib.crtp
 from lqr import FiniteHorizonLQR
 from math import sin, cos, sqrt
 
+from mpc import mpc
+
 
 @contextlib.contextmanager
 def raw_mode(file):
@@ -53,6 +55,21 @@ class Crazy_Auto:
         self.timePrint = 0.0
         self.is_flying = False
 
+        # Control Parm
+        self.g = 10.  # gravitational acc. [m/s^ 2]
+        self.m = 0.044  # mass [kg]
+        self.pi = 3.14
+        self.num_state = 6
+        self.num_action = 3
+        self.hover_thrust = 36850.0
+        self.thrust2input = 115000 #110000
+        self.input2thrust = 11e-6
+
+        # trans calculated control to command input
+        self.K_pitch = 1
+        self.K_roll = 1
+        # self.K_thrust = self.hover_thrust / (self.m * self.g)
+        self.K_thrust = 4000
 
         # Logged states - ,
         # log.position, log.velocity and log.attitude are all in the body frame of reference
@@ -69,33 +86,19 @@ class Crazy_Auto:
         self.yaw_increment = 0.1  # [rad]
 
         # Limits
-        self.thrust_limit = (0, 65000)
+        self.thrust_limit = (0, 63000)
         # self.roll_limit = (-30.0, 30.0)
         # self.pitch_limit = (-30.0, 30.0)
         # self.yaw_limit = (-200.0, 200.0)
-        self.roll_limit = (-3.0, 3.0)
-        self.pitch_limit = (-3.0, 3.0)
+        self.roll_limit = (-30, 30)
+        self.pitch_limit = (-30, 30)
 
         # Controller settings
         self.isEnabled = True
         self.rate = 50 #Hz
 
-
-
-        # Control Parm
-        self.g = 9.8  # gravitational acc. [m/s^ 2]
-        self.m = 0.027  # mass [kg]
-        self.pi = 3.14
-        self.num_state = 6
-        self.num_action = 3
-        self.hover_thrust = 36850.0
-
-        # trans calculated control to command input
-        self.K_pitch = 1
-        self.K_roll = 1
-        # self.K_thrust = self.hover_thrust / (self.m * self.g)
-        self.K_thrust = 4000
-
+        '''
+        # lqr for continuous sys
         self.A = np.array([
             [0, 0, 0, 1, 0, 0],
             [0, 0, 0, 0, 1, 0],
@@ -113,18 +116,18 @@ class Crazy_Auto:
             [0, -self.g, 0],
             [0, 0, 1.0/0.044]
         ]) # assume the yaw angle is 0
-
+        
         Qdiag = np.zeros(self.num_state)
         Qdiag[0:2] = 10.  # position
         Qdiag[2] = 5.
-        Qdiag[3:6] = 1. # velosity
+        Qdiag[3:6] = 0 # velosity
         self.Q = np.diag(Qdiag)
         Rdiag = np.zeros(self.num_action)
         Rdiag[0] = 2.
         Rdiag[1] = 2.
         Rdiag[2] = 1.
         self.R = np.diag(Rdiag)
-
+        '''
 
     def _run_controller(self):
         """ Main control loop """
@@ -136,6 +139,9 @@ class Crazy_Auto:
         # slight elevation
         # time.sleep(2)
         self.position_reference = [0., 0., 1.0]
+
+
+
         # Unlock the controller, BE CAREFLUE!!!
         self._cf.commander.send_setpoint(0, 0, 0, 0)
 
@@ -151,11 +157,11 @@ class Crazy_Auto:
             timeStart = time.time()
 
             # Get the references
-            x_r, y_r, z_r = self.position_reference
+            x_r, y_r, z_r = [0., 0., 1.]# self.position_reference
             dx_r, dy_r, dz_r = [0.0, 0.0, 0.0]
             target = np.array([x_r, y_r, z_r, dx_r, dy_r, dz_r])
-            print("position_references", self.position_reference)
-
+            # print("position_references", self.position_reference)
+            print("target: ", target)
             # Get measurements from the log
             x, y, z = self.position
             dx, dy, dz = self.velocity
@@ -163,27 +169,32 @@ class Crazy_Auto:
             state = np.array([x, y, z, dx, dy, dz])
             print("state: ", state)
 
-            state_data.append(state)
-            reference_data.append(target)
+            # state_data.append(state)
+            # reference_data.append(target)
+
             # Compute control signal - map errors to control signals
             if self.isEnabled:
-                lqr_policy = FiniteHorizonLQR(self.A, self.B, self.Q, self.R, self.Q, horizon = horizon)
-                lqr_policy.set_target_state(target)  ## set target state to koopman observable state
-                roll_r, pitch_r, thrust_r = lqr_policy(state)
+                mpc_policy = mpc(state, target, horizon)
+                roll_r, pitch_r, thrust_r = mpc_policy.solve()
 
-                roll_r = self.saturate(roll_r * self.K_roll, self.roll_limit)
-                pitch_r = self.saturate(pitch_r * self.K_pitch, self.pitch_limit)
-                thrust_r = self.saturate(thrust_r * self.K_thrust + self.hover_thrust, self.thrust_limit)  # minus, see notebook
+                roll_r = self.saturate(roll_r/self.pi*180, self.roll_limit)
+                pitch_r = self.saturate(pitch_r/self.pi*180, self.pitch_limit)
+                thrust_r = self.saturate((thrust_r + self.m * self.g) * self.thrust2input, self.thrust_limit)  # minus, see notebook
+                # print("self.m * self.g", self.m * self.g)
+                # print("input thrust_r: ", thrust_r)
             else:
                 # If the controller is disabled, send a zero-thrust
                 roll_r, pitch_r, thrust_r = (0, 0, 0)
             # Communicate a reference value to the Crazyflie
-            print("yaw angle: ", self.t.attitude[2])
+            # print("yaw angle: ", self.t.attitude[2])
             yaw_r = 0
             print("roll_r: ", roll_r)
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
-            # self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r)) # change!!!
+
+
             '''
             # Compute control errors
             ex = x_r - x
@@ -198,19 +209,20 @@ class Crazy_Auto:
 
             # Compute control signal - map errors to control signals
             if self.isEnabled:
-
                 ux = +self.saturate(Krp * ex + Krd * dex, self.pitch_limit)
                 uy = -self.saturate(Kpp * ey + Kpd * dey, self.roll_limit)
                 pitch_r = cos(yaw) * ux - sin(yaw) * uy
                 roll_r = sin(yaw) * ux + cos(yaw) * uy
-                thrust_r = + self.saturate((Kzp * ez + Kzd * dez + self.m * self.g) * (self.hover_thrust/(self.m*self.g) / (cos(roll) * cos(pitch))),
-                                           self.thrust_limit)
+                # thrust_r = + self.saturate((Kzp * ez + Kzd * dez + self.m * self.g) * (self.hover_thrust/(self.m*self.g)/ (cos(roll) * cos(pitch))), self.thrust_limit)
+                thrust_r = + self.saturate((Kzp * ez + self.m * self.g) * (self.hover_thrust / (self.m * self.g) / (cos(roll) * cos(pitch))), self.thrust_limit)
+
             else:
                 # If the controller is disabled, send a zero-thrust
                 roll_r, pitch_r, yaw_r, thrust_r = (0, 0, 0, 0)
 
             # Communicate a reference value to the Crazyflie
-            self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
+            # self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
+            self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r))
             '''
             self.loop_sleep(timeStart) # to make sure not faster than 50Hz
 
@@ -239,6 +251,7 @@ class Crazy_Auto:
         """ Sleeps the control loop to make it run at a specified rate """
         deltaTime = 1.0 / float(self.rate) - (time.time() - timeStart)
         if deltaTime > 0:
+            print("50Hz")
             time.sleep(deltaTime)
 
     def set_reference(self, message):
