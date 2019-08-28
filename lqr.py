@@ -1,5 +1,5 @@
 import numpy as np
-
+import control
 
 class lqr(object):
 
@@ -24,7 +24,7 @@ class lqr(object):
             [0., 0., 0.4545]
         ])
 
-        self.Q = np.diag((1., 1., 5., 0.8, 0.8, 0.8))
+        self.Q = np.diag((10., 10., 15., 0., 0., 0.))
         # self.Q = sparse.diags([10., 10., 5., 1., 1., 1.])
         self.F = self.Q
         self.R = np.diag((8., 8., 8.))
@@ -41,6 +41,7 @@ class lqr(object):
 
 
     def get_control_gains(self): # finite horizon LQR
+
         P = [None] * self.horizon
         P[-1] = self.F.copy()
         K = [None] * (self.horizon)
@@ -59,15 +60,13 @@ class lqr(object):
             r[i-1] = r[i] - rdot*self.time_step
         return K, r
 
-
     def solve(self):
+
         K,r = self.get_control_gains()
         ref = -self.Rinv.dot(self.B.T).dot(r[0])
         # print("K[0]: ", K[0])
         # print("Dstate: ", state-self.target_state)
         # return np.clip(-K[0].dot(state-self.target_state), self.sat_val[:, 0], self.sat_val[:, 1]) # only the first is applied (MPC)
+        print("K[0]", K[0])
         return -K[0].dot(self.state - self.target_state)
     
-    def get_linearization_from_trajectory(self, trajectory):
-        K,_ = self.get_control_gains() # list with length 20, each element is tuple(4,18)
-        return [-k for k in K]
