@@ -18,10 +18,10 @@ import Sensors
 
 from cflib.crazyflie import Crazyflie
 import cflib.crtp
-from lqr import FiniteHorizonLQR
 from math import sin, cos, sqrt
 
 from mpc import mpc
+from lqr import lqr
 
 
 @contextlib.contextmanager
@@ -62,7 +62,7 @@ class Crazy_Auto:
         self.num_state = 6
         self.num_action = 3
         self.hover_thrust = 36850.0
-        self.thrust2input = 115000 #110000
+        self.thrust2input = 115000
         self.input2thrust = 11e-6
 
         # trans calculated control to command input
@@ -83,6 +83,7 @@ class Crazy_Auto:
 
         # Increments
         self.position_increments = [0.1, 0.1, 0.1]  # [m]
+        self.micro_height_increments = 0.01
         self.yaw_increment = 0.1  # [rad]
 
         # Limits
@@ -97,37 +98,7 @@ class Crazy_Auto:
         self.isEnabled = True
         self.rate = 50 #Hz
 
-        '''
-        # lqr for continuous sys
-        self.A = np.array([
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
-        ])
 
-        self.B = np.array([
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [self.g, 0, 0],
-            [0, -self.g, 0],
-            [0, 0, 1.0/0.044]
-        ]) # assume the yaw angle is 0
-        
-        Qdiag = np.zeros(self.num_state)
-        Qdiag[0:2] = 10.  # position
-        Qdiag[2] = 5.
-        Qdiag[3:6] = 0 # velosity
-        self.Q = np.diag(Qdiag)
-        Rdiag = np.zeros(self.num_action)
-        Rdiag[0] = 2.
-        Rdiag[1] = 2.
-        Rdiag[2] = 1.
-        self.R = np.diag(Rdiag)
-        '''
 
     def _run_controller(self):
         """ Main control loop """
@@ -138,7 +109,7 @@ class Crazy_Auto:
         # Set the current reference to the current positional estimate, at a
         # slight elevation
         # time.sleep(2)
-        self.position_reference = [0., 0., 1.0]
+        self.position_reference = [0., -2., 0.5]
 
 
 
@@ -156,9 +127,16 @@ class Crazy_Auto:
 
             timeStart = time.time()
 
-            # Get the references
-            x_r, y_r, z_r = [0., 0., 1.]# self.position_reference
+            # # tracking
+            # x_r, y_r, z_r = [0., -2., 0.2]
+            # dx_r, dy_r, dz_r = [0.0, 0.0, 0.0]
+
+            x_r, y_r, z_r = self.position_reference
             dx_r, dy_r, dz_r = [0.0, 0.0, 0.0]
+
+            # x_r, y_r, z_r = [0., 0., 1.]
+            # dx_r, dy_r, dz_r = [0.0, 0.0, 0.5]
+
             target = np.array([x_r, y_r, z_r, dx_r, dy_r, dz_r])
             # print("position_references", self.position_reference)
             print("target: ", target)
@@ -174,8 +152,16 @@ class Crazy_Auto:
 
             # Compute control signal - map errors to control signals
             if self.isEnabled:
-                mpc_policy = mpc(state, target, horizon)
-                roll_r, pitch_r, thrust_r = mpc_policy.solve()
+                # mpc
+                # mpc_policy = mpc(state, target, horizon)
+                # roll_r, pitch_r, thrust_r = mpc_policy.solve()
+
+                # lqr
+                lqr_policy = lqr(state, target, horizon)
+                roll_r, pitch_r, thrust_r = lqr_policy.solve()
+                print("roll_computed: ", roll_r)
+                print("pitch_computed: ", pitch_r)
+                print("thrust_computed: ", thrust_r)
 
                 roll_r = self.saturate(roll_r/self.pi*180, self.roll_limit)
                 pitch_r = self.saturate(pitch_r/self.pi*180, self.pitch_limit)
@@ -192,6 +178,8 @@ class Crazy_Auto:
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
             self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+
+            # test height control
             # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r)) # change!!!
 
             step_count += 1
@@ -266,27 +254,33 @@ class Crazy_Auto:
         to change the valid_keys attribute in the interface thread)"""
         verbose = True
         if message == "s":
-            self.position_reference[0] -= self.position_increments[0]
-            if verbose: print('-x')
-        if message == "w":
-            self.position_reference[0] += self.position_increments[0]
-            if verbose: print('+x')
-        if message == "d":
             self.position_reference[1] -= self.position_increments[1]
             if verbose: print('-y')
-        if message == "a":
+        if message == "w":
             self.position_reference[1] += self.position_increments[1]
             if verbose: print('+y')
+        if message == "d":
+            self.position_reference[0] += self.position_increments[1]
+            if verbose: print('+x')
+        if message == "a":
+            self.position_reference[0] -= self.position_increments[1]
+            if verbose: print('-x')
         if message == "k":
             self.position_reference[2] -= self.position_increments[2]
             if verbose: print('-z')
         if message == "i":
             self.position_reference[2] += self.position_increments[2]
             if verbose: print('+z')
-        if message == "j":
-            self.yaw_reference += self.yaw_increment
-        if message == "l":
-            self.yaw_reference -= self.yaw_increment
+        if message == "n":
+            self.position_reference[2] += self.micro_height_increments
+            if verbose: print('-z')
+        if message == "m":
+            self.position_reference[2] += self.micro_height_increments
+            if verbose: print('+z')
+        # if message == "j":
+        #     self.yaw_reference += self.yaw_increment
+        # if message == "l":
+        #     self.yaw_reference -= self.yaw_increment
         if message == "q":
             self.isEnabled = False
         if message == "e":

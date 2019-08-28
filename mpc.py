@@ -2,6 +2,8 @@ import osqp
 import numpy as np
 import scipy as sp
 import scipy.sparse as sparse
+from c2d import c2d
+
 
 class mpc(object):
 
@@ -26,6 +28,8 @@ class mpc(object):
             [0, -self.g, 0],
             [0, 0, 1.0/0.044]
         ])
+        print("rank: ", np.rank(np.array(self.Ac)))
+        self.Ad, self.Bd = c2d(np.array(self.Ac), np.array(self.Bc), 0.02)
         '''
         # discretized system 50Hz
         self.Ad = sparse.csc_matrix([
@@ -44,21 +48,22 @@ class mpc(object):
             [0.,   -0.196, 0.],
             [0.,    0.,    0.4545]
         ])
+
         self.nx = self.Bd.shape[0]
         self.nu = self.Bd.shape[1]
 
         u0 = np.array([0., 0., 0])
         # roll, pitch, thrust
-        self.umin = np.array([-pi/6., -pi/6.,-0.75]) - u0  # -0.75N when equivalent, not 0
-        self.umax = np.array([ pi/6.,  pi/6., 0.75]) - u0
+        self.umin = np.array([-pi/8., -pi/8.,-0.75]) - u0  # -0.75N when equivalent, not 0
+        self.umax = np.array([ pi/8.,  pi/8., 0.75]) - u0
 
         self.xmin = np.array([-np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
         self.xmax = np.array([ np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf])
 
-        self.Q = sparse.diags([0.8, 0.8, 1., 0.2, 0.2, 0.4])
+        self.Q = sparse.diags([1., 1., 5., 0.8, 0.8, 0.8])
         # self.Q = sparse.diags([10., 10., 5., 1., 1., 1.])
         self.QN = self.Q
-        self.R = sparse.diags([6., 6., 8.])
+        self.R = sparse.diags([8., 8., 8.])
         # self.R = sparse.diags([1., 1., 1.])
 
         self.x0 = np.array(x0)
