@@ -44,8 +44,6 @@ class logs:
         
         self._cf._cf.connected.add_callback(self._cf._connected)
 
-
-
         # optitrack stuff
         self.l_odom = list()
         self.l_index = -1
@@ -78,8 +76,10 @@ class logs:
         self.s1.acquire()
         if len(self.l_odom) == self.sampleInterval:
             last_index = (self.l_index + 2) % self.sampleInterval
+            # last_index = (self.l_index + 8) % self.sampleInterval
             last_msg = self.l_odom[last_index]
             deltatime = msg['stamp'] - last_msg['stamp']
+            print("delta_time: ", deltatime)
             msg['velocity'][0] = (pos[0] - last_msg['position'][0]) / deltatime
             msg['velocity'][1] = (pos[1] - last_msg['position'][1]) / deltatime
             msg['velocity'][2] = (pos[2] - last_msg['position'][2]) / deltatime
@@ -100,8 +100,8 @@ class logs:
         self.velocity[0] = msg['velocity'][0]
         self.velocity[1] = msg['velocity'][1]
         self.velocity[2] = msg['velocity'][2]
-        # print("position: ", self.position)
-        # print("velocity: ", self.velocity)
+        print("position: ", self.position)
+        print("velocity: ", self.velocity)
 
     # for debug
     def log_file_print(self, file, data):
