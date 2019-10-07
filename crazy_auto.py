@@ -153,15 +153,15 @@ class Crazy_Auto:
             # Compute control signal - map errors to control signals
             if self.isEnabled:
                 # mpc
-                # mpc_policy = mpc(state, target, horizon)
-                # roll_r, pitch_r, thrust_r = mpc_policy.solve()
+                mpc_policy = mpc(state, target, horizon)
+                roll_r, pitch_r, thrust_r = mpc_policy.solve()
 
                 # lqr
-                lqr_policy = lqr(state, target, horizon)
-                roll_r, pitch_r, thrust_r = lqr_policy.solve()
-                print("roll_computed: ", roll_r)
-                print("pitch_computed: ", pitch_r)
-                print("thrust_computed: ", thrust_r)
+                # lqr_policy = lqr(state, target, horizon)
+                # roll_r, pitch_r, thrust_r = lqr_policy.solve()
+                # print("roll_computed: ", roll_r)
+                # print("pitch_computed: ", pitch_r)
+                # print("thrust_computed: ", thrust_r)
 
                 roll_r = self.saturate(roll_r/self.pi*180, self.roll_limit)
                 pitch_r = self.saturate(pitch_r/self.pi*180, self.pitch_limit)
