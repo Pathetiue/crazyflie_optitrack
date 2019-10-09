@@ -119,7 +119,7 @@ class Crazy_Auto:
         state_data = []
         reference_data = []
         control_data = []
-        save_dir = 'data' # will cover the old ones
+        save_dir = 'data1' # will cover the old ones
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
             os.makedirs(save_dir + '/training_data')
@@ -179,7 +179,7 @@ class Crazy_Auto:
             print("roll_r: ", roll_r)
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
-            # self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
 
             control_data.append(np.array([roll_r, - pitch_r, yaw_r, int(thrust_r)]))
             # test height control
