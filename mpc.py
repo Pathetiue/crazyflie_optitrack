@@ -1,8 +1,8 @@
 import osqp
 import numpy as np
-import scipy as sp
+# import scipy as sp
 import scipy.sparse as sparse
-from c2d import c2d
+# from c2d import c2d
 
 
 class mpc(object):
@@ -54,13 +54,19 @@ class mpc(object):
 
         u0 = np.array([0., 0., 0])
         # roll, pitch, thrust
+        # self.umin = np.array([-pi/8., -pi/8.,-0.75]) - u0  # -0.75N when equivalent, not 0
+        # self.umax = np.array([ pi/8.,  pi/8., 0.75]) - u0
         self.umin = np.array([-pi/8., -pi/8.,-0.75]) - u0  # -0.75N when equivalent, not 0
         self.umax = np.array([ pi/8.,  pi/8., 0.75]) - u0
 
         self.xmin = np.array([-np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
         self.xmax = np.array([ np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf])
-        self.Q = sparse.diags([0.8, 0.8, 1., 0.8, 0.8, 0.8])
-        self.QN = sparse.diags([1., 1., 1., 0.5, 0.5, 0.5])
+        # self.xmin = np.array([-0.5, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf])
+        # self.xmax = np.array([0.5, np.inf, np.inf, np.inf, np.inf, np.inf])
+
+
+        self.Q = sparse.diags([8., 6., 8., 1., 1., 2.])
+        self.QN = sparse.diags([10., 10., 10., 2., 2., 4.])
         # self.Q = sparse.diags([0.8, 0.8, 1., 0.2, 0.2, 0.4])
         # self.QN = sparse.diags([1., 1., 1., 0.5, 0.5, 0.5])
         self.R = sparse.diags([6., 6., 8.])

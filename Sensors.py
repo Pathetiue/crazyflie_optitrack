@@ -49,7 +49,7 @@ class logs:
         # optitrack stuff
         self.l_odom = list()
         self.l_index = -1
-        self.sampleInterval = 10
+        self.sampleInterval = 2
         self.s1 = threading.Semaphore(1)
 
         self.streamingClient = NatNetClient("192.168.1.113")  # Net2
@@ -76,8 +76,9 @@ class logs:
         msg['position'][1] = pos[1]
         msg['position'][2] = pos[2]
         self.s1.acquire()
+        deltatime = 1
         if len(self.l_odom) == self.sampleInterval:
-            last_index = (self.l_index + 2) % self.sampleInterval
+            last_index = (self.l_index + 1) % self.sampleInterval
             last_msg = self.l_odom[last_index]
             deltatime = msg['stamp'] - last_msg['stamp']
             msg['velocity'][0] = (pos[0] - last_msg['position'][0]) / deltatime
@@ -102,6 +103,7 @@ class logs:
         self.velocity[2] = msg['velocity'][2]
         # print("position: ", self.position)
         # print("velocity: ", self.velocity)
+        print("deltatime", deltatime)
 
     # for debug
     def log_file_print(self, file, data):

@@ -18,10 +18,10 @@ import Sensors
 
 from cflib.crazyflie import Crazyflie
 import cflib.crtp
-from math import sin, cos, sqrt
+# from math import sin, cos, sqrt
 
 from mpc import mpc
-from lqr import lqr
+# from lqr import lqr
 
 
 @contextlib.contextmanager
@@ -96,7 +96,7 @@ class Crazy_Auto:
 
         # Controller settings
         self.isEnabled = True
-        self.rate = 50 #Hz
+        self.rate = 50 # Hz
 
 
 
@@ -109,7 +109,7 @@ class Crazy_Auto:
         # Set the current reference to the current positional estimate, at a
         # slight elevation
         # time.sleep(2)
-        self.position_reference = [0., -2., 0.5]
+        self.position_reference = [0., 0., 0.8]
 
 
 
@@ -118,6 +118,7 @@ class Crazy_Auto:
 
         state_data = []
         reference_data = []
+        control_data = []
         save_dir = 'data' # will cover the old ones
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -166,6 +167,7 @@ class Crazy_Auto:
                 roll_r = self.saturate(roll_r/self.pi*180, self.roll_limit)
                 pitch_r = self.saturate(pitch_r/self.pi*180, self.pitch_limit)
                 thrust_r = self.saturate((thrust_r + self.m * self.g) * self.thrust2input, self.thrust_limit)  # minus, see notebook
+
                 # print("self.m * self.g", self.m * self.g)
                 # print("input thrust_r: ", thrust_r)
             else:
@@ -177,8 +179,9 @@ class Crazy_Auto:
             print("roll_r: ", roll_r)
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
-            self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            # self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
 
+            control_data.append(np.array([roll_r, - pitch_r, yaw_r, int(thrust_r)]))
             # test height control
             # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r)) # change!!!
 
@@ -186,6 +189,7 @@ class Crazy_Auto:
             if step_count > 500:
                 np.save(save_dir + '/training_data/data' + str(step_count) + '.npy', state_data)
                 np.save(save_dir + '/training_data/data' + str(step_count) + '.npy', reference_data)
+                np.save(save_dir + '/training_data/data' + str(step_count) + '.npy', control_data)
 
 
 
@@ -218,7 +222,7 @@ class Crazy_Auto:
             # self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
             self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r))
             '''
-            self.loop_sleep(timeStart) # to make sure not faster than 50Hz
+            self.loop_sleep(timeStart) # to make sure not faster than 200Hz
 
     def update_vals(self):
         self.position = self.t.position
@@ -245,7 +249,7 @@ class Crazy_Auto:
         """ Sleeps the control loop to make it run at a specified rate """
         deltaTime = 1.0 / float(self.rate) - (time.time() - timeStart)
         if deltaTime > 0:
-            print("50Hz")
+            print("200Hz")
             time.sleep(deltaTime)
 
     def set_reference(self, message):
@@ -364,6 +368,10 @@ if __name__ == '__main__':
     print("Crazyflies found:")
     for i in available:
         print(i[0])
+
+    # le = Crazy_Auto('radio://0/80/2M/E7E7E7E701')
+    # while le.is_connected:
+    #     time.sleep(1)
 
     if len(available) > 0:
         le = Crazy_Auto(available[0][0])
