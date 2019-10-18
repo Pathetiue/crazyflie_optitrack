@@ -2,6 +2,7 @@
 <project version="4">
   <component name="BookmarkManager">
     <bookmark url="file://$PROJECT_DIR$/crazy_auto.py" />
+    <bookmark url="file://$PROJECT_DIR$/Sensors.py" line="55" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d9e791f-c5bf-4c9f-b5de-ec55fb2e2fb9" name="Default Changelist" comment="">
@@ -36,11 +37,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/crazy_auto.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="473">
-              <caret line="183" column="83" selection-start-line="183" selection-start-column="83" selection-end-line="183" selection-end-column="83" />
+            <state relative-caret-position="248">
+              <caret line="94" column="28" lean-forward="true" selection-start-line="94" selection-start-column="28" selection-end-line="94" selection-end-column="28" />
               <folding>
                 <element signature="e#50#59#0" expanded="true" />
               </folding>
@@ -49,19 +50,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/proj/gts/crazyflie-lib-python/cflib/crtp/__init__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="501">
-              <caret line="67" column="17" selection-start-line="67" selection-start-column="17" selection-end-line="67" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Sensors.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1776">
-              <caret line="117" column="23" selection-start-line="117" selection-start-column="23" selection-end-line="117" selection-end-column="23" />
+            <state relative-caret-position="538">
+              <caret line="60" column="29" selection-start-line="60" selection-start-column="29" selection-end-line="60" selection-end-column="29" />
               <folding>
                 <element signature="e#17#28#0" expanded="true" />
               </folding>
@@ -69,11 +61,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/mpc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="845">
-              <caret line="59" column="47" selection-start-line="59" selection-start-column="47" selection-end-line="59" selection-end-column="47" />
+            <state relative-caret-position="1140">
+              <caret line="60" column="39" lean-forward="true" selection-start-line="60" selection-start-column="39" selection-end-line="60" selection-end-column="39" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -100,6 +92,9 @@
       <find>deltatime</find>
       <find>receiveRigidBodyFrame</find>
       <find>delta</find>
+      <find>wwpitch_r</find>
+      <find>hz</find>
+      <find>rate</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -112,8 +107,8 @@
         <option value="$PROJECT_DIR$/data/mpc.py" />
         <option value="$PROJECT_DIR$/lqr.py" />
         <option value="$PROJECT_DIR$/Sensors.py" />
-        <option value="$PROJECT_DIR$/mpc.py" />
         <option value="$PROJECT_DIR$/crazy_auto.py" />
+        <option value="$PROJECT_DIR$/mpc.py" />
       </list>
     </option>
   </component>
@@ -128,11 +123,24 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes />
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="crazyflie_optitrack" type="b2602c69:ProjectViewProjectNode" />
+              <item name="crazyflie_optitrack" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$USER_HOME$/crazyflie_optitrack" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -188,23 +196,25 @@
       <workItem from="1569756714086" duration="6906000" />
       <workItem from="1570447008454" duration="1999000" />
       <workItem from="1570451037733" duration="613000" />
-      <workItem from="1570497703064" duration="23883000" />
+      <workItem from="1570497703064" duration="25772000" />
+      <workItem from="1570937685986" duration="12831000" />
+      <workItem from="1571024800101" duration="3397000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="67264000" />
+    <option name="totallyTimeSpent" value="85381000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="928" height="1176" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.2494331" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2494331" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.3297456" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.11448141" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.11448141" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.104696676" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -286,30 +296,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Sensors.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1776">
-          <caret line="117" column="23" selection-start-line="117" selection-start-column="23" selection-end-line="117" selection-end-column="23" />
+        <state relative-caret-position="538">
+          <caret line="60" column="29" selection-start-line="60" selection-start-column="29" selection-end-line="60" selection-end-column="29" />
           <folding>
             <element signature="e#17#28#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mpc.py">
+    <entry file="file://$PROJECT_DIR$/crazy_auto.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="845">
-          <caret line="59" column="47" selection-start-line="59" selection-start-column="47" selection-end-line="59" selection-end-column="47" />
+        <state relative-caret-position="248">
+          <caret line="94" column="28" lean-forward="true" selection-start-line="94" selection-start-column="28" selection-end-line="94" selection-end-column="28" />
           <folding>
-            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#50#59#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/crazy_auto.py">
+    <entry file="file://$PROJECT_DIR$/mpc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="473">
-          <caret line="183" column="83" selection-start-line="183" selection-start-column="83" selection-end-line="183" selection-end-column="83" />
+        <state relative-caret-position="1140">
+          <caret line="60" column="39" lean-forward="true" selection-start-line="60" selection-start-column="39" selection-end-line="60" selection-end-column="39" />
           <folding>
-            <element signature="e#50#59#0" expanded="true" />
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -52,7 +52,8 @@ class logs:
         self.sampleInterval = 2
         self.s1 = threading.Semaphore(1)
 
-        self.streamingClient = NatNetClient("192.168.1.113")  # Net2
+        # self.streamingClient = NatNetClient("192.168.1.113")  # Net2
+        self.streamingClient = NatNetClient("172.16.6.124")  # Net2
         self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
         self.streamingClient.run()
 
