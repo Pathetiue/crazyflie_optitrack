@@ -49,24 +49,6 @@ class mpc(object):
             [0.,    0.,    0.4545]
         ])
 
-        # # discretized system 100Hz
-        # self.Ad = sparse.csc_matrix([
-        #     [1., 0., 0., 0.01, 0., 0.],
-        #     [0., 1., 0., 0., 0.01, 0.],
-        #     [0., 0., 1., 0., 0., 0.01],
-        #     [0., 0., 0., 1., 0., 0.],
-        #     [0., 0., 0., 0., 1., 0.],
-        #     [0., 0., 0., 0., 0., 1.]
-        # ])
-        # self.Bd = sparse.csc_matrix([
-        #     [0.0005, 0., 0.],
-        #     [0., -0.0005, 0.],
-        #     [0., 0., 0.0011],
-        #     [0.098, 0., 0.],
-        #     [0., -0.098, 0.],
-        #     [0., 0., 0.2273]
-        # ])
-
         self.nx = self.Bd.shape[0]
         self.nu = self.Bd.shape[1]
 
@@ -85,10 +67,9 @@ class mpc(object):
 
         self.Q = sparse.diags([8., 6., 8., 1., 1., 2.])
         self.QN = sparse.diags([10., 10., 10., 2., 2., 4.])
-        self.R = sparse.diags([6., 6., 8.])
         # self.Q = sparse.diags([0.8, 0.8, 1., 0.2, 0.2, 0.4])
-        # self.QN = self.Q
-        # self.R = sparse.diags([1., 1., 1.])
+        # self.QN = sparse.diags([1., 1., 1., 0.5, 0.5, 0.5])
+        self.R = sparse.diags([6., 6., 8.])
 
         self.x0 = np.array(x0)
         self.xr = np.array(xr)

@@ -78,12 +78,11 @@ class Crazy_Auto:
         self.attitude = [0.0, 0.0, 0.0]  # [rad] Attitude (p,r,y) with inverted roll (r)
 
         # References
-        self.position_reference = [0.0, 0.0, 0.0]  # [m] in the global frame
+        self.position_reference = [0.00, 0.00, 0.00]  # [m] in the global frame
         self.yaw_reference = 0.0  # [rad] in the global rame
 
         # Increments
-        self.position_increments = [0.1, 0.1, 0.1]  # [m]
-        self.micro_height_increments = 0.01
+        self.position_increments = [0.1, 0.1, 0.1, 0.02]  # [m]
         self.yaw_increment = 0.1  # [rad]
 
         # Limits
@@ -93,8 +92,7 @@ class Crazy_Auto:
         # self.yaw_limit = (-200.0, 200.0)
         self.roll_limit = (-30, 30)
         self.pitch_limit = (-30, 30)
-        self.max_hor_vel = 1
-        self.max_vert_vel = 0.1
+
         # Controller settings
         self.isEnabled = True
         self.rate = 50 # Hz
@@ -110,7 +108,7 @@ class Crazy_Auto:
         # Set the current reference to the current positional estimate, at a
         # slight elevation
         # time.sleep(2)
-        self.position_reference = [0., -3., 0.8]
+        self.position_reference = [0., -2., 0.7]
 
 
 
@@ -120,12 +118,11 @@ class Crazy_Auto:
         state_data = []
         reference_data = []
         control_data = []
-        save_dir = 'data1' # will cover the old ones
+        save_dir = 'data11' # will cover the old ones
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
             os.makedirs(save_dir + '/training_data')
         step_count = 0
-        eInt_vert = 0
         while True:
 
             timeStart = time.time()
@@ -155,58 +152,38 @@ class Crazy_Auto:
 
             # Compute control signal - map errors to control signals
             if self.isEnabled:
-                # mpc
-                mpc_policy = mpc(state, target, horizon)
-                roll_r, pitch_r, thrust_r = mpc_policy.solve()
-                roll_r = self.saturate(roll_r / self.pi * 180, self.roll_limit)
-                pitch_r = self.saturate(pitch_r / self.pi * 180, self.pitch_limit)
-                thrust_r = self.saturate((thrust_r + self.m * self.g) * self.thrust2input,
-                                         self.thrust_limit)  # minus, see notebook
+                if dx == 0.0 and dy == 0.0 and dz == 0.0:
+                    roll_r = 0
+                    pitch_r = 0
+                    thrust_r = self.hover_thrust
+                    print("NO FEEDBACK!")
+                else:
+                    # mpc
+                    mpc_policy = mpc(state, target, horizon)
+                    roll_r, pitch_r, thrust_r = mpc_policy.solve()
 
+                    # lqr
+                    # lqr_policy = lqr(state, target, horizon)
+                    # roll_r, pitch_r, thrust_r = lqr_policy.solve()
+                    # print("roll_computed: ", roll_r)
+                    # print("pitch_computed: ", pitch_r)
+                    # print("thrust_computed: ", thrust_r)
 
-                ## PID ##
-                # HORI_POS_P = 1
-                # HORI_POS_D = 0
-                # HORI_VEL_P = 5
-                #
-                # VERT_POS_P = 0.1
-                # VERT_POS_D = 0
-                # # VERT_VEL_P = 0.05
-                #
-                # pos = np.array([x, y])
-                # vel = np.array([dx, dy])
-                # exp_pos = np.array([x_r, y_r])
-                # u_vel = (exp_pos - pos) * HORI_POS_P - vel * HORI_POS_D
-                # u_vel_length = np.linalg.norm(u_vel)
-                # if u_vel_length > self.max_hor_vel:
-                #     u_vel = u_vel/u_vel_length
-                #     u_vel = u_vel * self.max_hor_vel
-                #     print("norm hori")
-                # u_horizon = (u_vel - vel) * HORI_VEL_P
-                # roll_r = u_horizon[0]
-                # pitch_r = u_horizon[1]
-                # eInt_vert += z_r - z
-                # vert = (z_r - z) * VERT_POS_P - z * VERT_POS_D
-                # vert_length = np.linalg.norm(vert)
-                # if vert_length > self.max_vert_vel:
-                #     vert = vert/vert_length
-                #     vert = vert * self.max_vert_vel
-                #     print("norm vert")
-                # # thrust_r = (vert - dz) * VERT_VEL_P
-                # thrust_r = vert
-                # roll_r = self.saturate(roll_r, self.roll_limit)
-                # pitch_r = self.saturate(pitch_r, self.pitch_limit)
-                # thrust_r = self.saturate((thrust_r + self.m * self.g) * self.thrust2input, self.thrust_limit)  # minus, see notebook
+                    roll_r = self.saturate(roll_r/self.pi*180, self.roll_limit)
+                    pitch_r = self.saturate(pitch_r/self.pi*180, self.pitch_limit)
+                    thrust_r = self.saturate((thrust_r + self.m * self.g) * self.thrust2input, self.thrust_limit)  # minus, see notebook
 
             else:
                 # If the controller is disabled, send a zero-thrust
                 roll_r, pitch_r, thrust_r = (0, 0, 0)
+            # Communicate a reference value to the Crazyflie
+            # print("yaw angle: ", self.t.attitude[2])
+
             yaw_r = 0
             print("roll_r: ", roll_r)
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
             self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
-            # self._cf.commander.send_setpoint(roll_r, pitch_r, yaw_r, int(thrust_r))
 
             control_data.append(np.array([roll_r, - pitch_r, yaw_r, int(thrust_r)]))
             # test height control
@@ -216,7 +193,7 @@ class Crazy_Auto:
             if step_count > 500:
                 np.save(save_dir + '/training_data/state' + str(step_count) + '.npy', state_data)
                 np.save(save_dir + '/training_data/ref' + str(step_count) + '.npy', reference_data)
-                np.save(save_dir + '/training_data/ctrl' + str(step_count) + '.npy', control_data)
+                np.save(save_dir + '/training_data/control' + str(step_count) + '.npy', control_data)
 
 
 
@@ -276,7 +253,7 @@ class Crazy_Auto:
         """ Sleeps the control loop to make it run at a specified rate """
         deltaTime = 1.0 / float(self.rate) - (time.time() - timeStart)
         if deltaTime > 0:
-            print("200Hz")
+            print("100Hz")
             time.sleep(deltaTime)
 
     def set_reference(self, message):
@@ -303,10 +280,10 @@ class Crazy_Auto:
             self.position_reference[2] += self.position_increments[2]
             if verbose: print('+z')
         if message == "n":
-            self.position_reference[2] += self.micro_height_increments
+            self.position_reference[2] += self.position_increments[3]
             if verbose: print('-z')
         if message == "m":
-            self.position_reference[2] += self.micro_height_increments
+            self.position_reference[2] -= self.position_increments[3]
             if verbose: print('+z')
         # if message == "j":
         #     self.yaw_reference += self.yaw_increment

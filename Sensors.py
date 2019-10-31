@@ -42,7 +42,7 @@ class logs:
         # self.quaternion.start()
         print("Logging Started\n")
         
-        self._cf._cf.connected.add_callback(self._cf._connected)
+
 
 
 
@@ -53,9 +53,14 @@ class logs:
         self.s1 = threading.Semaphore(1)
 
         # self.streamingClient = NatNetClient("192.168.1.113")  # Net2
-        self.streamingClient = NatNetClient("172.16.6.124")  # Net2
-        self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
+        self.streamingClient = NatNetClient("172.16.6.124")  # Net1
+        # self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
+        self.streamingClient.rigidBodyListListener = self.receiveRigidBodyFrame
         self.streamingClient.run()
+
+        time.sleep(1)
+
+        self._cf._cf.connected.add_callback(self._cf._connected)
 
     def update_error(self, logconf, msg):
         print("Error when logging %s: %s" % (logconf.name, msg))
@@ -66,20 +71,66 @@ class logs:
         self.attitude[1] = data["stabilizer.pitch"]
         self.attitude[2] = data["stabilizer.yaw"]
 
-    def receiveRigidBodyFrame(self, id, pos, rotation):
+    # def receiveRigidBodyFrame(self, id, pos, rotation):
+    #     msg = {
+    #         'position': [0., 0., 0.],
+    #         'stamp': 0,
+    #         'velocity': [0., 0., 0.]
+    #     }
+    #     msg['stamp'] = time.time()
+    #     msg['position'][0] = pos[0]
+    #     msg['position'][1] = pos[1]
+    #     msg['position'][2] = pos[2]
+    #     self.s1.acquire()
+    #     deltatime = 1
+    #     if len(self.l_odom) == self.sampleInterval:
+    #         last_index = (self.l_index + 1) % self.sampleInterval
+    #         last_msg = self.l_odom[last_index]
+    #         deltatime = msg['stamp'] - last_msg['stamp']
+    #         msg['velocity'][0] = (pos[0] - last_msg['position'][0]) / deltatime
+    #         msg['velocity'][1] = (pos[1] - last_msg['position'][1]) / deltatime
+    #         msg['velocity'][2] = (pos[2] - last_msg['position'][2]) / deltatime
+    #         if abs(msg['velocity'][0]) < 0.0001:
+    #             msg['velocity'][0] = 0
+    #         if abs(msg['velocity'][1]) < 0.0001:
+    #             msg['velocity'][1] = 0
+    #     else:
+    #         self.l_odom.append(msg)
+    #     self.l_index = (self.l_index + 1) % self.sampleInterval
+    #     self.l_odom[self.l_index] = msg
+    #     self.s1.release()
+    #
+    #     self.position[0] = msg['position'][0]
+    #     self.position[1] = msg['position'][1]
+    #     self.position[2] = msg['position'][2]
+    #
+    #     self.velocity[0] = msg['velocity'][0]
+    #     self.velocity[1] = msg['velocity'][1]
+    #     self.velocity[2] = msg['velocity'][2]
+    #     # print("position: ", self.position)
+    #     # print("velocity: ", self.velocity)
+    #     print("deltatime", deltatime)
+    
+    def receiveRigidBodyFrame(self, rigidBodyList, timestamp):
+        # self.rigidBodyList.append((id, pos, rot, trackingValid))
+        id = rigidBodyList[0][0]
+        pos = rigidBodyList[0][1]
+        rot = rigidBodyList[0][2]
+        trackingValid = rigidBodyList[0][3]
+        # print("stamp: ", timestamp)
         msg = {
             'position': [0., 0., 0.],
             'stamp': 0,
             'velocity': [0., 0., 0.]
         }
-        msg['stamp'] = time.time()
+        msg['stamp'] = timestamp
         msg['position'][0] = pos[0]
         msg['position'][1] = pos[1]
         msg['position'][2] = pos[2]
         self.s1.acquire()
         deltatime = 1
         if len(self.l_odom) == self.sampleInterval:
-            last_index = (self.l_index + 1) % self.sampleInterval
+            last_index = (self.l_index + 2) % self.sampleInterval
             last_msg = self.l_odom[last_index]
             deltatime = msg['stamp'] - last_msg['stamp']
             msg['velocity'][0] = (pos[0] - last_msg['position'][0]) / deltatime
@@ -102,9 +153,7 @@ class logs:
         self.velocity[0] = msg['velocity'][0]
         self.velocity[1] = msg['velocity'][1]
         self.velocity[2] = msg['velocity'][2]
-        # print("position: ", self.position)
-        # print("velocity: ", self.velocity)
-        print("deltatime", deltatime)
+        print("Feedback Freq", (1./deltatime))
 
     # for debug
     def log_file_print(self, file, data):
