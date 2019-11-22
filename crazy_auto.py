@@ -18,7 +18,7 @@ import Sensors
 
 from cflib.crazyflie import Crazyflie
 import cflib.crtp
-# from math import sin, cos, sqrt
+from math import sin, cos, sqrt
 
 from mpc import mpc
 # from lqr import lqr
@@ -149,7 +149,7 @@ class Crazy_Auto:
 
             state_data.append(state)
             reference_data.append(target)
-
+            '''
             # Compute control signal - map errors to control signals
             if self.isEnabled:
                 if dx == 0.0 and dy == 0.0 and dz == 0.0:
@@ -183,7 +183,9 @@ class Crazy_Auto:
             print("roll_r: ", roll_r)
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
-            self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            # self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            height = 30
+            self._cf.commander.send_hover_setpoint(0, 0, 0, height / 100.)
 
             control_data.append(np.array([roll_r, - pitch_r, yaw_r, int(thrust_r)]))
             # test height control
@@ -199,33 +201,49 @@ class Crazy_Auto:
 
             '''
             # Compute control errors
-            ex = x_r - x
-            ey = y_r - y
-            ez = z_r - z
-            dex = dx_r - dx
-            dey = dy_r - dy
-            dez = dz_r - dz
+            ex = x - x_r
+            ey = y - y_r
+            ez = z - z_r
+            dex = dx - dx_r
+            dey = dy - dy_r
+            dez = dz - dz_r
 
-            Kzp, Krp, Kpp, Kyp = (200.0, 20.0, 20.0, 10.0)  # Pretty haphazard tuning
-            Kzd, Krd, Kpd = (2 * 2 * sqrt(Kzp), 2 * sqrt(Krp), 2 * sqrt(Kpp))
+            xi = 1.2
+            wn = 3.0
+            Kp = - wn * wn
+            Kd = - 2 * wn * xi
 
+            Kxp = 1.2 * Kp
+            Kxd = 1.2 * Kd
+            Kyp = Kp
+            Kyd = Kd
+            Kzp = 0.8 * Kp
+            Kzd = 0.8 * Kd
             # Compute control signal - map errors to control signals
             if self.isEnabled:
-                ux = +self.saturate(Krp * ex + Krd * dex, self.pitch_limit)
-                uy = -self.saturate(Kpp * ey + Kpd * dey, self.roll_limit)
-                pitch_r = cos(yaw) * ux - sin(yaw) * uy
-                roll_r = sin(yaw) * ux + cos(yaw) * uy
-                # thrust_r = + self.saturate((Kzp * ez + Kzd * dez + self.m * self.g) * (self.hover_thrust/(self.m*self.g)/ (cos(roll) * cos(pitch))), self.thrust_limit)
-                thrust_r = + self.saturate((Kzp * ez + self.m * self.g) * (self.hover_thrust / (self.m * self.g) / (cos(roll) * cos(pitch))), self.thrust_limit)
+                ux = self.saturate(Kxp * ex + Kxd * dex, self.roll_limit)
+                uy = self.saturate(Kyp * ey + Kyd * dey, self.pitch_limit)
+                pitch_r = uy
+                roll_r = ux
+                # pitch_r = cos(yaw) * ux - sin(yaw) * uy
+                # roll_r = sin(yaw) * ux + cos(yaw) * uy
+                thrust_r = self.saturate((Kzp * ez + Kzd * dez + self.g) * self.m * self.thrust2input,
+                                         self.thrust_limit)  # / (cos(roll) * cos(pitch))
 
             else:
                 # If the controller is disabled, send a zero-thrust
                 roll_r, pitch_r, yaw_r, thrust_r = (0, 0, 0, 0)
+            yaw_r = 0
+            self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
+            # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r))
+            print("Kp: ", Kp)
+            print("Kd: ", Kd)
+            print("z control: ", (((Kzp * ez + Kzd * dez + self.g) * self.m)))
+            print("roll_r: ", roll_r)
+            print("pitch_r: ", pitch_r)
+            print("thrust_r: ", int(thrust_r))
+            control_data.append(np.array([roll_r, pitch_r, yaw_r, int(thrust_r)]))
 
-            # Communicate a reference value to the Crazyflie
-            # self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
-            self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r))
-            '''
             self.loop_sleep(timeStart) # to make sure not faster than 200Hz
 
     def update_vals(self):
@@ -373,7 +391,7 @@ if __name__ == '__main__':
     for i in available:
         print(i[0])
 
-    # le = Crazy_Auto('radio://0/80/2M/E7E7E7E702')
+    # le = Crazy_Auto('radio://0/80/2M')
     # while le.is_connected:
     #     time.sleep(1)
 
