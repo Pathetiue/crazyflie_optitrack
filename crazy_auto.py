@@ -7,6 +7,7 @@ import sys
 sys.path.append("../lib")
 import time
 from threading import Thread, Timer
+import threading
 
 import termios
 import contextlib
@@ -41,8 +42,10 @@ class Crazy_Auto:
     """ Basic calls and functions to enable autonomous flight """  
     def __init__(self, link_uri):
         """ Initialize crazyflie using passed in link"""
+        self.s1 = threading.Semaphore(1)
         self._cf = Crazyflie()
         self.t = Sensors.logs(self)
+
         # the three function calls below setup threads for connection monitoring
         self._cf.disconnected.add_callback(self._disconnected) #first monitor thread checking for disconnections
         self._cf.connection_failed.add_callback(self._connection_failed) #second monitor thread for checking for back connection to crazyflie
@@ -50,10 +53,6 @@ class Crazy_Auto:
         print("Connecting to %s" % link_uri)
         self._cf.open_link(link_uri) #connects to crazyflie and downloads TOC/Params
         self.is_connected = True
-
-        self.daemon = True
-        self.timePrint = 0.0
-        self.is_flying = False
 
         # Control Parm
         self.g = 10.  # gravitational acc. [m/s^ 2]
@@ -63,13 +62,6 @@ class Crazy_Auto:
         self.num_action = 3
         self.hover_thrust = 36850.0
         self.thrust2input = 115000
-        self.input2thrust = 11e-6
-
-        # trans calculated control to command input
-        self.K_pitch = 1
-        self.K_roll = 1
-        # self.K_thrust = self.hover_thrust / (self.m * self.g)
-        self.K_thrust = 4000
 
         # Logged states - ,
         # log.position, log.velocity and log.attitude are all in the body frame of reference
@@ -79,77 +71,60 @@ class Crazy_Auto:
 
         # References
         self.position_reference = [0.00, 0.00, 0.00]  # [m] in the global frame
-        self.yaw_reference = 0.0  # [rad] in the global rame
 
         # Increments
         self.position_increments = [0.1, 0.1, 0.1, 0.02]  # [m]
-        self.yaw_increment = 0.1  # [rad]
 
         # Limits
         self.thrust_limit = (0, 63000)
-        # self.roll_limit = (-30.0, 30.0)
-        # self.pitch_limit = (-30.0, 30.0)
-        # self.yaw_limit = (-200.0, 200.0)
         self.roll_limit = (-30, 30)
         self.pitch_limit = (-30, 30)
 
         # Controller settings
         self.isEnabled = True
         self.rate = 50 # Hz
-
+        self.period = 1.0 / float(self.rate)
 
 
     def _run_controller(self):
         """ Main control loop """
-        # Controller parameters
-
-        horizon = 20
-
-        # Set the current reference to the current positional estimate, at a
-        # slight elevation
-        # time.sleep(2)
-        self.position_reference = [0., -2., 0.7]
-
-
-
+        # Wait for feedback
+        time.sleep(2)
         # Unlock the controller, BE CAREFLUE!!!
         self._cf.commander.send_setpoint(0, 0, 0, 0)
 
-        state_data = []
-        reference_data = []
+        horizon = 20
+        step_count = 0
+
+        self.position_reference = [0., 0., 0.7]
+
+        # state_data = []
+        # reference_data = []
         control_data = []
-        save_dir = 'data11' # will cover the old ones
+        save_dir = 'data' # will cover the old ones
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
             os.makedirs(save_dir + '/training_data')
-        step_count = 0
+
+
+        self.last_time = time.time()
         while True:
-
-            timeStart = time.time()
-
-            # # tracking
-            # x_r, y_r, z_r = [0., -2., 0.2]
-            # dx_r, dy_r, dz_r = [0.0, 0.0, 0.0]
 
             x_r, y_r, z_r = self.position_reference
             dx_r, dy_r, dz_r = [0.0, 0.0, 0.0]
-
-            # x_r, y_r, z_r = [0., 0., 1.]
-            # dx_r, dy_r, dz_r = [0.0, 0.0, 0.5]
-
             target = np.array([x_r, y_r, z_r, dx_r, dy_r, dz_r])
-            # print("position_references", self.position_reference)
-            print("target: ", target)
-            # Get measurements from the log
+
             x, y, z = self.position
             dx, dy, dz = self.velocity
-            roll, pitch, yaw = self.t.attitude
-            state = np.array([x, y, z, dx, dy, dz])
+            roll, pitch, yaw = self.attitude
+            state = np.array([x, y, z, dx, dy, dz, roll, pitch, yaw])
+
+            print("target: ", target)
             print("state: ", state)
 
-            state_data.append(state)
-            reference_data.append(target)
-            '''
+            # state_data.append(state)
+            # reference_data.append(target)
+
             # Compute control signal - map errors to control signals
             if self.isEnabled:
                 if dx == 0.0 and dy == 0.0 and dz == 0.0:
@@ -158,8 +133,9 @@ class Crazy_Auto:
                     thrust_r = self.hover_thrust
                     print("NO FEEDBACK!")
                 else:
+
                     # mpc
-                    mpc_policy = mpc(state, target, horizon)
+                    mpc_policy = mpc(state[:6], target, horizon)
                     roll_r, pitch_r, thrust_r = mpc_policy.solve()
 
                     # lqr
@@ -172,34 +148,34 @@ class Crazy_Auto:
                     roll_r = self.saturate(roll_r/self.pi*180, self.roll_limit)
                     pitch_r = self.saturate(pitch_r/self.pi*180, self.pitch_limit)
                     thrust_r = self.saturate((thrust_r + self.m * self.g) * self.thrust2input, self.thrust_limit)  # minus, see notebook
+                    # thrust_r = self.saturate(
+                    #     (thrust_r + self.m * self.g) / (cos(pitch/180.*self.pi) * cos(roll/180.*self.pi)) * self.thrust2input,
+                    #     self.thrust_limit)  # minus, see notebook
 
             else:
                 # If the controller is disabled, send a zero-thrust
                 roll_r, pitch_r, thrust_r = (0, 0, 0)
-            # Communicate a reference value to the Crazyflie
-            # print("yaw angle: ", self.t.attitude[2])
 
             yaw_r = 0
             print("roll_r: ", roll_r)
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
-            # self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
-            height = 30
-            self._cf.commander.send_hover_setpoint(0, 0, 0, height / 100.)
 
-            control_data.append(np.array([roll_r, - pitch_r, yaw_r, int(thrust_r)]))
-            # test height control
-            # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r)) # change!!!
-
+            # control_data.append(np.concatenate([target, state, np.array([roll_r, - pitch_r, yaw_r, int(thrust_r), time.time()])]))
+            control_data.append(time.time())
             step_count += 1
-            if step_count > 500:
-                np.save(save_dir + '/training_data/state' + str(step_count) + '.npy', state_data)
-                np.save(save_dir + '/training_data/ref' + str(step_count) + '.npy', reference_data)
+            if step_count % 5000 == 0:
+                # np.save(save_dir + '/training_data/state' + str(step_count) + '.npy', state_data)
+                # np.save(save_dir + '/training_data/ref' + str(step_count) + '.npy', reference_data)
                 np.save(save_dir + '/training_data/control' + str(step_count) + '.npy', control_data)
 
-
+            self.loop_sleep()  # to make sure not faster than 200Hz
+            self._cf.commander.send_setpoint(roll_r, - pitch_r, yaw_r, int(thrust_r)) # change!!!
+            # height = 30
+            # self._cf.commander.send_hover_setpoint(0, 0, 0, height / 100.)
 
             '''
+            ## PID
             # Compute control errors
             ex = x - x_r
             ey = y - y_r
@@ -209,7 +185,7 @@ class Crazy_Auto:
             dez = dz - dz_r
 
             xi = 1.2
-            wn = 3.0
+            wn = 3.0q
             Kp = - wn * wn
             Kd = - 2 * wn * xi
 
@@ -234,7 +210,7 @@ class Crazy_Auto:
                 # If the controller is disabled, send a zero-thrust
                 roll_r, pitch_r, yaw_r, thrust_r = (0, 0, 0, 0)
             yaw_r = 0
-            self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
+            # self._cf.commander.send_setpoint(roll_r, pitch_r, 0, int(thrust_r))
             # self._cf.commander.send_setpoint(0, 0, 0, int(thrust_r))
             print("Kp: ", Kp)
             print("Kd: ", Kd)
@@ -243,15 +219,16 @@ class Crazy_Auto:
             print("pitch_r: ", pitch_r)
             print("thrust_r: ", int(thrust_r))
             control_data.append(np.array([roll_r, pitch_r, yaw_r, int(thrust_r)]))
-
-            self.loop_sleep(timeStart) # to make sure not faster than 200Hz
+            '''
 
     def update_vals(self):
+        self.s1.acquire()
         self.position = self.t.position
         self.velocity = self.t.velocity  # [m/s] in the global frame of reference
         self.attitude = self.t.attitude  # [rad] Attitude (p,r,y) with inverted roll (r)
-
-        Timer(.1, self.update_vals).start()
+        self.s1.release()
+        # print("update_vals")
+        Timer(.005, self.update_vals).start()
 
     def saturate(self, value, limits):
         """ Saturates a given value to reside on the the interval 'limits'"""
@@ -261,18 +238,14 @@ class Crazy_Auto:
             value = limits[1]
         return value
 
-    def print_at_period(self, period, message):
-        """ Prints the message at a given period """
-        if (time.time() - period) > self.timePrint:
-            self.timePrint = time.time()
-            print(message)
-
-    def loop_sleep(self, timeStart):
+    def loop_sleep(self):
         """ Sleeps the control loop to make it run at a specified rate """
-        deltaTime = 1.0 / float(self.rate) - (time.time() - timeStart)
+        deltaTime = self.period - (time.time() - self.last_time)
         if deltaTime > 0:
-            print("100Hz")
+            print("real_time")
             time.sleep(deltaTime)
+        self.last_time = time.time()
+
 
     def set_reference(self, message):
         """ Enables an incremental change in the reference and defines the
@@ -353,8 +326,7 @@ class inputThread(Thread):
 
         x-translation - controlled by ("w","s")
         y-translation - controlled by ("a","d")
-        z-translation - controlled by ("i","k")
-        yaw           - controlled by ("j","l")
+        z-translation - controlled by ("i","k") ("m","n")
 
     Furthermore, the controller can be enabled and disabled by
 
@@ -391,7 +363,7 @@ if __name__ == '__main__':
     for i in available:
         print(i[0])
 
-    # le = Crazy_Auto('radio://0/80/2M')
+    # le = Crazy_Auto('radio://0/80/2M/E7E7E7E702')
     # while le.is_connected:
     #     time.sleep(1)
 

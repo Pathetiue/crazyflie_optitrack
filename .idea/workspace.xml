@@ -6,8 +6,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6d9e791f-c5bf-4c9f-b5de-ec55fb2e2fb9" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Sensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/Sensors.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crazy_auto.py" beforeDir="false" afterPath="$PROJECT_DIR$/crazy_auto.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/osqp-python/osqp_sources" beforeDir="false" afterPath="$PROJECT_DIR$/osqp-python/osqp_sources" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/osqp-python/osqp_sources/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/osqp-python/osqp_sources/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/osqp-python/osqp_sources/docs/make.bat" beforeDir="false" afterPath="$PROJECT_DIR$/osqp-python/osqp_sources/docs/make.bat" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -38,8 +43,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/crazy_auto.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="359">
-              <caret line="237" column="33" lean-forward="true" selection-start-line="237" selection-start-column="33" selection-end-line="237" selection-end-column="33" />
+            <state relative-caret-position="380">
+              <caret line="169" column="94" selection-start-line="169" selection-start-column="94" selection-end-line="169" selection-end-column="94" />
               <folding>
                 <element signature="e#50#59#0" expanded="true" />
               </folding>
@@ -50,8 +55,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/mpc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="532">
-              <caret line="31" column="61" selection-start-line="31" selection-start-column="61" selection-end-line="31" selection-end-column="61" />
+            <state relative-caret-position="152">
+              <caret line="8" selection-start-line="8" selection-end-line="8" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -62,8 +67,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Sensors.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2508">
-              <caret line="135" column="40" selection-start-line="135" selection-start-column="40" selection-end-line="135" selection-end-column="40" />
+            <state relative-caret-position="628">
+              <caret line="104" column="45" selection-start-line="104" selection-start-column="45" selection-end-line="104" selection-end-column="45" />
               <folding>
                 <element signature="e#17#28#0" expanded="true" />
               </folding>
@@ -93,6 +98,23 @@
       <find>wwpitch_r</find>
       <find>hz</find>
       <find>rate</find>
+      <find>K_pitch</find>
+      <find>K_thrust</find>
+      <find>update_vals</find>
+      <find>Thread</find>
+      <find>controller</find>
+      <find>inputThread</find>
+      <find>set_reference</find>
+      <find>update_attitude</find>
+      <find>s1</find>
+      <find>daemon</find>
+      <find>is_flying</find>
+      <find>timePrint</find>
+      <find>print_at_period</find>
+      <find>input2thrust</find>
+      <find>yaw_reference</find>
+      <find>sampleInterval</find>
+      <find>l_index</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -104,8 +126,8 @@
         <option value="$PROJECT_DIR$/osqp_test.py" />
         <option value="$PROJECT_DIR$/data/mpc.py" />
         <option value="$PROJECT_DIR$/lqr.py" />
-        <option value="$PROJECT_DIR$/Sensors.py" />
         <option value="$PROJECT_DIR$/mpc.py" />
+        <option value="$PROJECT_DIR$/Sensors.py" />
         <option value="$PROJECT_DIR$/crazy_auto.py" />
       </list>
     </option>
@@ -122,6 +144,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -133,12 +156,11 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$/crazyflie_optitrack" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -197,17 +219,18 @@
       <workItem from="1570497703064" duration="25772000" />
       <workItem from="1570937685986" duration="12831000" />
       <workItem from="1571024800101" duration="3397000" />
+      <workItem from="1574685704327" duration="5504000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="90462000" />
+    <option name="totallyTimeSpent" value="103663000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="928" height="1176" extended-state="4" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2494331" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.25207296" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -228,7 +251,7 @@
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Remote Host" order="3" />
       <window_info anchor="right" id="Database" order="4" weight="0.32946378" />
-      <window_info anchor="right" id="SciView" order="5" weight="0.32993197" />
+      <window_info anchor="right" id="SciView" order="5" weight="0.32946378" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -277,30 +300,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Sensors.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2508">
-          <caret line="135" column="40" selection-start-line="135" selection-start-column="40" selection-end-line="135" selection-end-column="40" />
-          <folding>
-            <element signature="e#17#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mpc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="532">
-          <caret line="31" column="61" selection-start-line="31" selection-start-column="61" selection-end-line="31" selection-end-column="61" />
+        <state relative-caret-position="152">
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/proj/gts/crazyflie-lib-python/cflib/crazyflie/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="417">
+          <caret line="76" column="52" lean-forward="true" selection-start-line="76" selection-start-column="52" selection-end-line="77" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Sensors.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="628">
+          <caret line="104" column="45" selection-start-line="104" selection-start-column="45" selection-end-line="104" selection-end-column="45" />
+          <folding>
+            <element signature="e#17#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/crazy_auto.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="359">
-          <caret line="237" column="33" lean-forward="true" selection-start-line="237" selection-start-column="33" selection-end-line="237" selection-end-column="33" />
+        <state relative-caret-position="380">
+          <caret line="169" column="94" selection-start-line="169" selection-start-column="94" selection-end-line="169" selection-end-column="94" />
           <folding>
             <element signature="e#50#59#0" expanded="true" />
           </folding>

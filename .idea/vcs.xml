@@ -3,5 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/osqp-python" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/osqp-python/osqp_sources" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/osqp-python/osqp_sources/lin_sys/direct/qdldl/qdldl_sources" vcs="Git" />
   </component>
 </project>
